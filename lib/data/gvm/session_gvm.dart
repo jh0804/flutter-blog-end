@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_blog/_core/utils/my_http.dart';
+import 'package:flutter_blog/data/model/user.dart';
 import 'package:flutter_blog/data/repository/user_repository.dart';
 import 'package:flutter_blog/main.dart';
 import 'package:flutter_blog/ui/pages/auth/join_page/join_fm.dart';
@@ -67,21 +68,19 @@ class SessionGVM extends Notifier<SessionModel> {
       return;
     }
 
-    // 3. 토큰 디바이스 저장 -> 앱 껐다가 켜도 자동 로그인 가능
-    await secureStorage.write(key: "accessToken", value: body["response"]["accessToken"]);
+    // 3. 파싱
+    User user = User.fromMap(body["response"]);
 
-    // 4. 세션 모델 갱신 (현재 isLogin = false 상태 / fromMap 파싱하는거 만드는게 낫다 아니면 밑의 코드처럼 다 적어야됨)
-    state = SessionModel(
-        id: body["response"]["id"],
-        username: body["response"]["username"],
-        imgUrl: body["response"]["imgUrl"],
-        accessToken: body["response"]["accessToken"],
-        isLogin: true);
+    // 4. 토큰 디바이스 저장 -> 앱 껐다가 켜도 자동 로그인 가능
+    await secureStorage.write(key: "accessToken", value: user.accessToken);
 
-    // 5. dio의 header에 토큰 세팅 // 매번 안해도 된다. 통신 및 필요할 때마다 dio.post에서 넣어줘야 됨
-    dio.options.headers["Authorization"] = body["response"]["accessToken"];
+    // 5. 세션 모델 갱신 (현재 isLogin = false 상태 / fromMap 파싱하는거 만드는게 낫다 아니면 밑의 코드처럼 다 적어야됨)
+    state = SessionModel(user: user, isLogin: true);
 
-    // 6. 게시글 목록 페이지 이동 / popAndPushNamed -> 화면 날리고 들어간다.(로그인 안한걸로 되돌아갈거 아니니까/ 안날리면 모든 화면 쌓여있음) / 이런거 gpt한테 물어보기
+    // 6. dio의 header에 토큰 세팅 // 매번 안해도 된다. 통신 및 필요할 때마다 dio.post에서 넣어줘야 됨
+    dio.options.headers["Authorization"] = user.accessToken;
+
+    // 7. 게시글 목록 페이지 이동 / popAndPushNamed -> 화면 날리고 들어간다.(로그인 안한걸로 되돌아갈거 아니니까/ 안날리면 모든 화면 쌓여있음) / 이런거 gpt한테 물어보기
     Navigator.pushNamed(mContext, "/post/list");
   }
 
@@ -90,17 +89,14 @@ class SessionGVM extends Notifier<SessionModel> {
 
 /// 3. 창고 데이터 타입
 class SessionModel {
-  int? id;
-  String? username;
-  String? imgUrl;
-  String? accessToken; // 통신할 때 매번 device에서 꺼내는 것보다 메모리에서 꺼내는 게 낫다. (device는 자동로그인할 때 쓸거임)
+  User? user;
   bool? isLogin;
 
-  SessionModel({this.id, this.username, this.accessToken, this.imgUrl, this.isLogin = false});
+  SessionModel({this.user, this.isLogin = false});
 
   @override
   String toString() {
-    return 'SessionModel{id: $id, username: $username, imgUrl: $imgUrl, accessToken: $accessToken, isLogin: $isLogin}';
+    return 'SessionModel{user: $user, isLogin: $isLogin}';
   }
 
   // 화면 갱신X -> copyWith 안 만듦
