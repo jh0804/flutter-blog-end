@@ -35,6 +35,7 @@ class CustomNavigation extends StatelessWidget {
               TextButton(
                 onPressed: () {
                   scaffoldKey.currentState!.openEndDrawer();
+                  // 여기서 provider로
                   Navigator.popAndPushNamed(context, "/login");
                 },
                 child: const Text(
