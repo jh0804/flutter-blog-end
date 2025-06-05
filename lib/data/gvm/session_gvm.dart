@@ -1,8 +1,9 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_blog/_core/utils/my_http.dart';
 import 'package:flutter_blog/data/repository/user_repository.dart';
 import 'package:flutter_blog/main.dart';
 import 'package:flutter_blog/ui/pages/auth/join_page/join_fm.dart';
+import 'package:flutter_blog/ui/pages/auth/login_page/login_fm.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logger/logger.dart';
 
@@ -44,18 +45,63 @@ class SessionGVM extends Notifier<SessionModel> {
     Navigator.pushNamed(mContext, "/login");
   }
 
-  Future<void> login(String username, String password) async {}
+  Future<void> login(String username, String password) async {
+    // 1. 유효성 검사
+    Logger().d("username : ${username}, password : ${password}");
+    bool isValid = ref.read(loginProvider.notifier).validate();
+    if (!isValid) {
+      ScaffoldMessenger.of(mContext).showSnackBar(
+        SnackBar(content: Text("유효성 검사 실패")),
+      );
+      return;
+    }
+
+    // 2. 통신
+    Map<String, dynamic> body = await UserRepository().login(username, password);
+    if (!body["success"]) {
+      // = 통신 실패
+      // 토스트 띄우기
+      ScaffoldMessenger.of(mContext).showSnackBar(
+        SnackBar(content: Text("${body["errorMessage"]}")),
+      );
+      return;
+    }
+
+    // 3. 토큰 디바이스 저장 -> 앱 껐다가 켜도 자동 로그인 가능
+    await secureStorage.write(key: "accessToken", value: body["response"]["accessToken"]);
+
+    // 4. 세션 모델 갱신 (현재 isLogin = false 상태 / fromMap 파싱하는거 만드는게 낫다 아니면 밑의 코드처럼 다 적어야됨)
+    state = SessionModel(
+        id: body["response"]["id"],
+        username: body["response"]["username"],
+        imgUrl: body["response"]["imgUrl"],
+        accessToken: body["response"]["accessToken"],
+        isLogin: true);
+
+    // 5. dio의 header에 토큰 세팅 // 매번 안해도 된다. 통신 및 필요할 때마다 dio.post에서 넣어줘야 됨
+    dio.options.headers["Authorization"] = body["response"]["accessToken"];
+
+    // 6. 게시글 목록 페이지 이동 / popAndPushNamed -> 화면 날리고 들어간다.(로그인 안한걸로 되돌아갈거 아니니까/ 안날리면 모든 화면 쌓여있음) / 이런거 gpt한테 물어보기
+    Navigator.pushNamed(mContext, "/post/list");
+  }
+
   Future<void> logout() async {}
 }
 
 /// 3. 창고 데이터 타입
 class SessionModel {
   int? id;
-  String? userName;
+  String? username;
+  String? imgUrl;
   String? accessToken; // 통신할 때 매번 device에서 꺼내는 것보다 메모리에서 꺼내는 게 낫다. (device는 자동로그인할 때 쓸거임)
   bool? isLogin;
 
-  SessionModel({this.id, this.userName, this.accessToken, this.isLogin = false});
+  SessionModel({this.id, this.username, this.accessToken, this.imgUrl, this.isLogin = false});
+
+  @override
+  String toString() {
+    return 'SessionModel{id: $id, username: $username, imgUrl: $imgUrl, accessToken: $accessToken, isLogin: $isLogin}';
+  }
 
   // 화면 갱신X -> copyWith 안 만듦
 }
