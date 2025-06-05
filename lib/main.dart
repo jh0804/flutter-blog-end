@@ -7,7 +7,7 @@ import 'package:flutter_blog/ui/pages/post/write_page/post_write_page.dart';
 import 'package:flutter_blog/ui/pages/splash/splash_page.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-// TODO: 1. Stack의 가장 위 context를 알고 있다.
+// TODO: 1. Stack의 가장 위 context를 알고 있다. -> 지금 몰라도 됨 (가장 첫번째로 떠있는 화면의 context 가져올 수 있음)
 GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() {
