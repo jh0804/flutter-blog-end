@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_blog/data/model/post.dart';
 import 'package:flutter_blog/data/repository/post_repository.dart';
 import 'package:flutter_blog/main.dart';
@@ -20,6 +21,14 @@ class PostListVM extends Notifier<PostListModel?> {
 
   Future<void> init({int page = 0}) async {
     Map<String, dynamic> body = await PostRepository().getList(page: page);
+    if (!body["success"]) {
+      // = 통신 실패
+      // 토스트 띄우기
+      ScaffoldMessenger.of(mContext).showSnackBar(
+        SnackBar(content: Text("게시글 상세보기 실패 : ${body["errorMessage"]}")),
+      );
+      return;
+    }
     state = PostListModel.fromMap(body["response"]);
   }
 }

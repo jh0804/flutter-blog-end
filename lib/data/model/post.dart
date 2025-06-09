@@ -7,7 +7,8 @@ class Post {
   DateTime createdAt;
   DateTime updatedAt;
   User user;
-  int bookmarkCount;
+  int bookmarkCount; // PostListPage 만들면서 추가 됨
+  bool? isBookmark; // PostDetail에서는 무조건 존재하지만 다른 곳에서는 null일 수도 있다.
 
   Post({
     required this.id,
@@ -17,6 +18,7 @@ class Post {
     required this.updatedAt,
     required this.user,
     required this.bookmarkCount,
+    this.isBookmark,
   });
 
   Post.fromMap(Map<String, dynamic> data)
@@ -26,5 +28,6 @@ class Post {
         createdAt = DateTime.parse(data['createdAt']),
         updatedAt = DateTime.parse(data['updatedAt']),
         bookmarkCount = data['bookmarkCount'],
+        isBookmark = data['isBookmark'],
         user = User.fromMap(data['user']);
 }

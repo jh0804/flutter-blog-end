@@ -9,4 +9,12 @@ class PostRepository {
     Logger().d(responseBody);
     return responseBody;
   }
+
+  // TODO 1 : getOne(postId) 만들기 + 테스트 코드
+  Future<Map<String, dynamic>> getOne(int postId) async {
+    Response response = await dio.get("/api/post/${postId}");
+    final responseBody = response.data;
+    Logger().d(responseBody);
+    return responseBody;
+  }
 }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_blog/ui/pages/post/detail_page/post_detail_page.dart';
-import 'package:flutter_blog/ui/pages/post/list_page/post_vm.dart';
+import 'package:flutter_blog/ui/pages/post/list_page/post_list_vm.dart';
 import 'package:flutter_blog/ui/pages/post/list_page/widgets/post_list_item.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -17,7 +17,7 @@ class PostListBody extends ConsumerWidget {
         itemBuilder: (context, index) {
           return InkWell(
             onTap: () {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => PostDetailPage()));
+              Navigator.push(context, MaterialPageRoute(builder: (context) => PostDetailPage(model.posts[index].id)));
             },
             child: PostListItem(model.posts[index]),
           );
