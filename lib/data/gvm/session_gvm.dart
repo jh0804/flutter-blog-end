@@ -5,6 +5,7 @@ import 'package:flutter_blog/data/repository/user_repository.dart';
 import 'package:flutter_blog/main.dart';
 import 'package:flutter_blog/ui/pages/auth/join_page/join_fm.dart';
 import 'package:flutter_blog/ui/pages/auth/login_page/login_fm.dart';
+import 'package:flutter_blog/ui/pages/post/list_page/post_list_page.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logger/logger.dart';
 
@@ -77,7 +78,7 @@ class SessionGVM extends Notifier<SessionModel> {
     // 5. 세션 모델 갱신 (현재 isLogin = false 상태 / fromMap 파싱하는거 만드는게 낫다 아니면 밑의 코드처럼 다 적어야됨)
     state = SessionModel(user: user, isLogin: true);
 
-    // 6. dio의 header에 토큰 세팅 // 매번 안해도 된다. 통신 및 필요할 때마다 dio.post에서 넣어줘야 됨
+    // 6. dio의 header에 토큰 세팅 (Bearer 이거 붙어 있음) // 매번 안해도 된다. 통신 및 필요할 때마다 dio.post에서 넣어줘야 됨
     dio.options.headers["Authorization"] = user.accessToken;
 
     // 7. 게시글 목록 페이지 이동 / popAndPushNamed -> 화면 날리고 들어간다.(로그인 안한걸로 되돌아갈거 아니니까/ 안날리면 모든 화면 쌓여있음) / 이런거 gpt한테 물어보기
@@ -86,12 +87,17 @@ class SessionGVM extends Notifier<SessionModel> {
 
   Future<void> logout() async {
     // 1. 토큰 디바이스 제거
+    await secureStorage.delete(key: "accessToken");
 
     // 2. 세션 모델 초기화
+    state = SessionModel();
 
     // 3. dio 세팅 제거
+    dio.options.headers["Authorization"] = "";
 
     // 4. login 페이지 이동
+    scaffoldKey.currentState!.openEndDrawer();
+    Navigator.pushNamed(mContext, "/login");
   }
 }
 

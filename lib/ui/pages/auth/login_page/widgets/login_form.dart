@@ -14,7 +14,7 @@ class LoginForm extends ConsumerWidget {
     LoginFM fm = ref.read(loginProvider.notifier);
     LoginModel model = ref.watch(loginProvider); // errorText 때문에 watch -> 아니면 필요X
 
-    Logger().d(model); // toString이 있으니까 바로 보인다
+    // Logger().d(model); // toString이 있으니까 바로 보인다
 
     return Form(
       child: Column(
