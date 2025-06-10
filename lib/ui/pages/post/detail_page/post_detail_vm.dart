@@ -21,7 +21,7 @@ class PostDetailVM extends AutoDisposeFamilyNotifier<PostDetailModel?, int> {
 
     // 2. VM 파괴되는지 확인하는 이벤트
     ref.onDispose(() {
-      Logger().d("PostDetailModel 파괴됨");
+      Logger().d("PostDetailVM 파괴됨");
     });
 
     // 3. 상태 값 세팅

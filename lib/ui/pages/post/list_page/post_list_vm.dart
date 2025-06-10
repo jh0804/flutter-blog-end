@@ -4,19 +4,26 @@ import 'package:flutter_blog/data/repository/post_repository.dart';
 import 'package:flutter_blog/main.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logger/logger.dart';
+import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 /// 1. 창고 관리자
-final postListProvider = NotifierProvider<PostListVM, PostListModel?>(() {
+final postListProvider = AutoDisposeNotifierProvider<PostListVM, PostListModel?>(() {
   return PostListVM();
 });
 
 /// 2. 창고 (상태가 변경되어도 화면 갱신 안 함 -> watch 하지마)
-class PostListVM extends Notifier<PostListModel?> {
+class PostListVM extends AutoDisposeNotifier<PostListModel?> {
   final mContext = navigatorKey.currentContext!;
+  final refreshCtrl = RefreshController(); // state는 아니고 창고가 가지고 있는 부산물같은 것
 
   @override
   PostListModel? build() {
     init();
+
+    ref.onDispose(() {
+      Logger().d("PostListVM 파괴됨");
+    });
+
     return null;
   }
 
@@ -31,6 +38,9 @@ class PostListVM extends Notifier<PostListModel?> {
       return;
     }
     state = PostListModel.fromMap(body["response"]);
+
+    // init이 종료될 때 실행되어야 하는 마지막 트랜잭션
+    refreshCtrl.refreshCompleted();
   }
 
   void notifyDeleteOne(int postId) {
@@ -82,15 +92,41 @@ class PostListVM extends Notifier<PostListModel?> {
     state = state!.copyWith(posts: nextPosts);
     // = init();
   }
+
+  Future<void> nextList() async {
+    PostListModel prevModel = state!;
+
+    if (prevModel.isLast) {
+      await Future.delayed(Duration(milliseconds: 500)); // 0.5초간 로딩되는 걸 봐야 오류가 아닌걸 느낄 수 있음
+      refreshCtrl.loadComplete();
+      return;
+    }
+
+    Map<String, dynamic> body = await PostRepository().getList(page: prevModel.pageNumber + 1);
+    if (!body["success"]) {
+      // = 통신 실패
+      // 토스트 띄우기
+      ScaffoldMessenger.of(mContext).showSnackBar(
+        SnackBar(content: Text("게시글 load 실패 : ${body["errorMessage"]}")),
+      );
+      refreshCtrl.loadComplete();
+      return;
+    }
+
+    PostListModel nextModel = PostListModel.fromMap(body["response"]);
+    // nextModel의 isFirst totalPage를 사용해야함.
+    // nextModel의 컬렉션 + 이전 모델의 컬렉션 = 전개 연산자로 해결
+    state = nextModel.copyWith(posts: [...prevModel.posts, ...nextModel.posts]);
+  }
 }
 
 /// 3. 창고 데이터 타입
 class PostListModel {
-  bool? isFirst;
-  bool? isLast;
-  int? pageNumber;
-  int? size;
-  int? totalPage;
+  bool isFirst;
+  bool isLast;
+  int pageNumber;
+  int size;
+  int totalPage;
   List<Post> posts;
 
   PostListModel(this.isFirst, this.isLast, this.pageNumber, this.size, this.totalPage, this.posts);
