@@ -68,6 +68,20 @@ class PostListVM extends Notifier<PostListModel?> {
     // 5. 글쓰기 화면 pop
     Navigator.pop(mContext);
   }
+
+  void notifyUpdate(Post post) {
+    // map으로 for문을 돌려서 update된 게시글 찾아내기
+    List<Post> nextPosts = state!.posts.map((p) {
+      if (p.id == post.id) {
+        return post;
+      } else {
+        return p;
+      }
+    }).toList();
+
+    state = state!.copyWith(posts: nextPosts);
+    // = init();
+  }
 }
 
 /// 3. 창고 데이터 타입
