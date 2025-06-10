@@ -14,6 +14,7 @@ class PostDetailButtons extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     SessionModel sessionModel = ref.read(sessionProvider);
+    PostDetailVM vm = ref.read(postDetailProvider(post.id).notifier);
 
     // 창고에 접근해서 isOwner이라는 함수로 처리하는 방법도 있다.
     // SessionGVM sessionGVM = ref.read(sessionProvider.notifier);
@@ -27,7 +28,9 @@ class PostDetailButtons extends ConsumerWidget {
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           IconButton(
-            onPressed: () async {},
+            onPressed: () async {
+              vm.deleteOne(post.id);
+            },
             icon: const Icon(CupertinoIcons.delete),
           ),
           IconButton(
