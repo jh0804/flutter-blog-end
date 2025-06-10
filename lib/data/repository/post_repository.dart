@@ -24,4 +24,11 @@ class PostRepository {
     Logger().d(responseBody);
     return responseBody;
   }
+
+  Future<Map<String, dynamic>> write(String title, String content) async {
+    Response response = await dio.post("/api/post", data: {"title": title, "content": content});
+    final responseBody = response.data;
+    Logger().d(responseBody);
+    return responseBody;
+  }
 }

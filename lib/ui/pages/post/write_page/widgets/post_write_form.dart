@@ -1,37 +1,50 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_blog/_core/constants/size.dart';
 import 'package:flutter_blog/_core/utils/validator_util.dart';
+import 'package:flutter_blog/ui/pages/post/list_page/post_list_vm.dart';
+import 'package:flutter_blog/ui/pages/post/write_page/post_write_fm.dart';
 import 'package:flutter_blog/ui/widgets/custom_elavated_button.dart';
 import 'package:flutter_blog/ui/widgets/custom_text_area.dart';
 import 'package:flutter_blog/ui/widgets/custom_text_form_field.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class PostWriteForm extends StatelessWidget {
-  final _formKey = GlobalKey<FormState>();
-  final _title = TextEditingController();
-  final _content = TextEditingController();
-
-  PostWriteForm({Key? key}) : super(key: key);
+class PostWriteForm extends ConsumerWidget {
+  //late String title;
+  //late String content;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // 공급자가 되기 위해서는 창고에 접근해야한다.
+    PostWriteFM fm = ref.read(postWriteProvider.notifier);
+    PostListVM vm = ref.read(postListProvider.notifier);
+    PostWriteModel model = ref.watch(postWriteProvider);
+
     return Form(
-      key: _formKey,
       child: ListView(
         shrinkWrap: true,
         children: [
           CustomTextFormField(
-            controller: _title,
             hint: "Title",
+            onChanged: (value) {
+              fm.title(value);
+              //title = value;
+            }, // = callback
           ),
           const SizedBox(height: smallGap),
           CustomTextArea(
-            controller: _content,
             hint: "Content",
+            onChanged: (value) {
+              fm.content(value);
+              //content = value;
+            },
           ),
           const SizedBox(height: largeGap),
           CustomElevatedButton(
             text: "글쓰기",
-            click: () {},
+            click: () {
+              vm.write(model.title, model.content); // 상태에 있는걸 다시 꺼내서 write에게 넘긴다.
+              //vm.write(title, content);
+            },
           ),
         ],
       ),
