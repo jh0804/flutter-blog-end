@@ -35,7 +35,7 @@ class PostDetailButtons extends ConsumerWidget {
           ),
           IconButton(
             onPressed: () {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => PostUpdatePage()));
+              Navigator.push(context, MaterialPageRoute(builder: (_) => PostUpdatePage(post)));
             },
             icon: const Icon(CupertinoIcons.pen),
           ),

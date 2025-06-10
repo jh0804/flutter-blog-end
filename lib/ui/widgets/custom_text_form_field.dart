@@ -4,16 +4,19 @@ class CustomTextFormField extends StatelessWidget {
   final String hint;
   final bool obscureText;
   final Function(String)? onChanged; // 매개변수가 있는 함수
+  final String initalValue; // 매번 받을 필요X -> 선택적 & 빈 문자열로 초기화
 
   CustomTextFormField({
     required this.hint,
     this.obscureText = false,
     this.onChanged,
+    this.initalValue = "",
   });
 
   @override
   Widget build(BuildContext context) {
     return TextFormField(
+      initialValue: initalValue,
       obscureText: obscureText,
       onChanged: onChanged,
       decoration: InputDecoration(
