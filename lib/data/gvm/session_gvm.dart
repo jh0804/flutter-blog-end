@@ -22,6 +22,44 @@ class SessionGVM extends Notifier<SessionModel> {
     return SessionModel(); // isLogin만 false고 나머지는 null
   }
 
+  Future<void> autoLogin() async {
+    // state에 로그인된 정보 있니? -> 지금 빈 객체임 ->  없으면 통신해서 state 갱신해봐야 됨
+    String? accessToken = await secureStorage.read(key: "accessToken"); // null일수도 있음 // 꺼내고 넣어야 됨
+    // 통신하기 전에 null 체크
+    if (accessToken == null) {
+      // Navigator.pushNamed(mContext, "/login"); // Splash 페이지 없애고 이동
+      Navigator.pushNamedAndRemoveUntil(mContext, "/login", (route) => false);
+      return; // else 안쓰고 안 되는 것부터 미리 필터링한다.
+    }
+    // 토큰 존재한다면
+    // 1. 통신
+    Map<String, dynamic> body = await UserRepository().autoLogin(accessToken); // accessToken : 여기에서는 코드상 절대 null일 수 없다.
+    if (!body["success"]) {
+      // = 통신 실패
+      // 토스트 띄우기
+      ScaffoldMessenger.of(mContext).showSnackBar(
+        SnackBar(content: Text("${body["errorMessage"]}")),
+      );
+      Navigator.pushNamedAndRemoveUntil(mContext, "/login", (route) => false);
+      return;
+    }
+
+    // 2. 파싱 -
+    User user = User.fromMap(body["response"]); // 지금은 유저에 토큰 없다.
+    user.accessToken = accessToken; // 서버에서 토큰 주면 이 코드 있으면 안된다! -> 비지니스 로직 이해
+
+    // 로그인 후처리 프로세스 -> 함수로 뺄 수 있다.
+    // 3. 세션 동기화 (응답에 토큰 없으므로 디바이스에 저장할 필요 없음)
+    // 세션 모델 갱신
+    state = SessionModel(user: user, isLogin: true);
+
+    // dio의 header에 토큰 세팅
+    dio.options.headers["Authorization"] = user.accessToken; // dio = 메모리에서 뜨는것?
+
+    // 게시글 목록 페이지 이동 / popAndPushNamed -> 화면 날리고 들어간다.(로그인 안한걸로 되돌아갈거 아니니까/ 안날리면 모든 화면 쌓여있음) / 이런거 gpt한테 물어보기
+    Navigator.pushNamed(mContext, "/post/list");
+  }
+
   Future<void> join(String username, String email, String password) async {
     Logger().d("username : ${username}, email : ${email}, password : ${password}");
     bool isValid = ref.read(joinProvider.notifier).validate();
